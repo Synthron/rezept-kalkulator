@@ -17,7 +17,7 @@ def db(tmp_path):
 
 @pytest.fixture
 def beispiel(db):
-    """Beispieldaten aus PLANUNG.md, Abschnitt 5.4; gibt die vergebenen IDs zurück."""
+    """Beispielrechnung aus der README; gibt die vergebenen IDs zurück."""
     def artikel(name, kategorie, menge, einheit, preis):
         return db.speichere_artikel(Artikel(None, name, kategorie, D(menge), einheit, D(preis))).id
 

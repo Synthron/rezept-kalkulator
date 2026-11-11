@@ -19,7 +19,7 @@ def ui_db(tmp_path, monkeypatch):
 
 @pytest.fixture
 def beispiel_komplett(ui_db):
-    """Orangensirup und -likör inkl. Endprodukte aus PLANUNG.md, Abschnitt 5.4, plus ein Rezept in kg."""
+    """Orangensirup und -likör inkl. Endprodukte (Beispielrechnung aus der README) plus ein Rezept in kg."""
     db = ui_db
 
     def artikel(name, menge, einheit, preis, kategorie=Kategorie.ZUTAT):

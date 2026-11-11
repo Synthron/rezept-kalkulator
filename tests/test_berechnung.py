@@ -22,7 +22,7 @@ from kalkulation.modelle import (
 
 D = Decimal
 
-# Beispieldaten aus PLANUNG.md, Abschnitt 5.4 und 5.5
+# Beispieldaten aus der README, Abschnitt „Beispielrechnung“
 ORANGEN, ZUCKER, WASSER, ALKOHOL, FLASCHE, VERSCHLUSS, ETIKETT, ORANGEN_STK = range(1, 9)
 SIRUP, LIKOER, SAFT = range(1, 4)
 

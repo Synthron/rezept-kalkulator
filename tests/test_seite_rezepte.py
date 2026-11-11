@@ -16,7 +16,7 @@ def db(ui_db):
 
 @pytest.fixture
 def beispiel(db):
-    """Orangensirup und -likör aus PLANUNG.md, Abschnitt 5.4."""
+    """Orangensirup und -likör (Beispielrechnung aus der README)."""
     def artikel(name, menge, einheit, preis, kategorie=Kategorie.ZUTAT):
         return db.speichere_artikel(Artikel(None, name, kategorie, D(menge), einheit, D(preis))).id
 
