@@ -7,6 +7,7 @@ from kalkulation.einheiten import Gruppe, gruppe
 from kalkulation.modelle import Endprodukt
 from oberflaeche import (
     VERPACKUNGS_SPALTEN,
+    auswahl_tabelle,
     datenbank,
     dezimal,
     endprodukt_tabelle,
@@ -33,8 +34,10 @@ kalkulator = Kalkulator(artikel, rezepte)
 # --- Übersichtstabelle -----------------------------------------------------------
 
 if endprodukte:
-    st.dataframe(
-        endprodukt_tabelle(kalkulator.endprodukt(e) for e in endprodukte), hide_index=True, width="stretch"
+    auswahl_tabelle(
+        endprodukt_tabelle(kalkulator.endprodukt(e) for e in endprodukte),
+        [e.id for e in endprodukte],
+        "endprodukt_auswahl",
     )
 else:
     st.info("Keine Endprodukte vorhanden. Lege unten das erste Endprodukt an.")
@@ -159,7 +162,8 @@ if st.button("Speichern", type="primary", disabled=bool(fehler), key=f"ep_speich
         st.error(str(f))
     else:
         merke_meldung(f"Endprodukt „{gespeichert.name}“ gespeichert.")
-        st.session_state["_naechste_endprodukt_auswahl"] = gespeichert.id
+        # Nach dem Anlegen leeres Formular für das nächste Endprodukt, beim Bearbeiten Auswahl behalten.
+        st.session_state["_naechste_endprodukt_auswahl"] = gespeichert.id if aktuell else NEU
         st.session_state["endprodukt_form_version"] = version + 1
         st.rerun()
 

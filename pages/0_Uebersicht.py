@@ -19,7 +19,18 @@ spalte3.metric("Endprodukte", len(endprodukte))
 
 st.subheader("Herstellkosten je Gebinde")
 if endprodukte:
-    st.dataframe(endprodukt_tabelle(kalkulator.endprodukt(e) for e in endprodukte), hide_index=True, width="stretch")
+    st.caption("Zeile anklicken, um das Endprodukt bzw. Rezept zu öffnen.")
+    gewaehlt = st.dataframe(
+        endprodukt_tabelle(kalkulator.endprodukt(e) for e in endprodukte),
+        hide_index=True,
+        width="stretch",
+        on_select="rerun",
+        selection_mode="single-row",
+        key="uebersicht_endprodukte",
+    )
+    if zeilen := gewaehlt.selection.rows:
+        st.session_state["_naechste_endprodukt_auswahl"] = endprodukte[zeilen[0]].id
+        st.switch_page("pages/3_Endprodukte.py")
 else:
     st.info(
         "Noch keine Endprodukte vorhanden. Vorgehen über die Seitenleiste:\n\n"
@@ -30,6 +41,16 @@ else:
 
 st.subheader("Rezepte")
 if rezepte:
-    st.dataframe(rezept_tabelle(kalkulator.rezept(r.id) for r in rezepte), hide_index=True, width="stretch")
+    gewaehlt = st.dataframe(
+        rezept_tabelle(kalkulator.rezept(r.id) for r in rezepte),
+        hide_index=True,
+        width="stretch",
+        on_select="rerun",
+        selection_mode="single-row",
+        key="uebersicht_rezepte",
+    )
+    if zeilen := gewaehlt.selection.rows:
+        st.session_state["_naechste_rezept_auswahl"] = rezepte[zeilen[0]].id
+        st.switch_page("pages/2_Rezepte.py")
 else:
     st.caption("Noch keine Rezepte vorhanden.")

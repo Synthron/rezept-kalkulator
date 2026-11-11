@@ -81,6 +81,17 @@ def test_neues_endprodukt_anlegen(db, beispiel):
     neu = next(e for e in db.lade_endprodukte() if e.name == "Likör Probierflasche")
     assert (neu.rezept_id, neu.fuellmenge_ml, neu.verpackung) == (beispiel["likoer"].id, D("40"), ())
     assert "gespeichert" in at.success[0].value
+    assert at.selectbox(key="endprodukt_auswahl").value == 0
+    assert at.text_input(key="ep_name_0_1").value == ""
+
+
+def test_klick_in_tabelle_waehlt_endprodukt(db, beispiel):
+    at = starte()
+    zeile = list(at.dataframe[0].value["Endprodukt"]).index("Orangenlikör 0,5 l")
+    at.session_state["endprodukt_auswahl_tabelle_0"] = {"selection": {"rows": [zeile], "columns": []}}
+    at.run()
+    assert not at.exception
+    assert at.selectbox(key="endprodukt_auswahl").value == beispiel["likoer_flasche"].id
 
 
 def test_fuellmenge_null_sperrt_speichern(db, beispiel):

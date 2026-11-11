@@ -111,6 +111,17 @@ def test_neues_rezept_ohne_zutaten_anlegen(db):
     assert not at.exception
     assert [r.name for r in db.lade_rezepte()] == ["Läuterzucker"]
     assert "gespeichert" in at.success[0].value
+    assert at.selectbox(key="rezept_auswahl").value == 0
+    assert at.text_input(key="rezept_name_0_1").value == ""
+
+
+def test_klick_in_tabelle_waehlt_rezept(db, beispiel):
+    at = starte()
+    zeile = list(at.dataframe[0].value["Name"]).index("Orangenlikör")
+    at.session_state["rezept_auswahl_tabelle_0"] = {"selection": {"rows": [zeile], "columns": []}}
+    at.run()
+    assert not at.exception
+    assert at.selectbox(key="rezept_auswahl").value == beispiel["likoer"].id
 
 
 def test_fehler_beim_speichern_wird_angezeigt(db, beispiel):

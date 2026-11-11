@@ -37,6 +37,25 @@ def zeige_meldung() -> None:
         st.success(meldung)
 
 
+def auswahl_tabelle(daten: pd.DataFrame, ids: list[int], auswahl_key: str) -> None:
+    """Tabelle, in der ein Klick auf eine Zeile den Eintrag in der Auswahlbox `auswahl_key` öffnet."""
+    version = st.session_state.setdefault(f"_{auswahl_key}_tabelle", 0)
+    gewaehlt = st.dataframe(
+        daten,
+        hide_index=True,
+        width="stretch",
+        on_select="rerun",
+        selection_mode="single-row",
+        key=f"{auswahl_key}_tabelle_{version}",
+    )
+    st.caption("Zeile anklicken, um den Eintrag unten zu bearbeiten.")
+    if zeilen := gewaehlt.selection.rows:
+        st.session_state[f"_naechste_{auswahl_key}"] = ids[zeilen[0]]
+        # Neuer Schlüssel hebt die Markierung auf, damit sie nicht veraltet stehen bleibt.
+        st.session_state[f"_{auswahl_key}_tabelle"] = version + 1
+        st.rerun()
+
+
 # --- Rezeptpositionen ↔ Tabelle --------------------------------------------------
 
 @dataclass(frozen=True)

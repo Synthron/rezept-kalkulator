@@ -9,6 +9,7 @@ from kalkulation.einheiten import EINHEITEN, gruppe, in_basis
 from kalkulation.modelle import Rezept
 from oberflaeche import (
     POSITIONS_SPALTEN,
+    auswahl_tabelle,
     datenbank,
     dezimal,
     merke_meldung,
@@ -35,7 +36,7 @@ kalkulator = Kalkulator(artikel, rezepte)
 # --- Übersichtstabelle -----------------------------------------------------------
 
 if rezepte:
-    st.dataframe(rezept_tabelle(kalkulator.rezept(r.id) for r in rezepte), hide_index=True, width="stretch")
+    auswahl_tabelle(rezept_tabelle(kalkulator.rezept(r.id) for r in rezepte), [r.id for r in rezepte], "rezept_auswahl")
 else:
     st.info("Keine Rezepte vorhanden. Lege unten das erste Rezept an.")
 
@@ -165,7 +166,8 @@ if st.button("Speichern", type="primary", disabled=bool(fehler), key=f"rezept_sp
         st.error(str(f))
     else:
         merke_meldung(f"Rezept „{gespeichert.name}“ gespeichert.")
-        st.session_state["_naechste_rezept_auswahl"] = gespeichert.id
+        # Nach dem Anlegen leeres Formular für das nächste Rezept, beim Bearbeiten Auswahl behalten.
+        st.session_state["_naechste_rezept_auswahl"] = gespeichert.id if aktuell else NEU
         st.session_state["rezept_form_version"] = version + 1
         st.rerun()
 

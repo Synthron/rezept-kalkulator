@@ -5,7 +5,7 @@ from kalkulation.anzeige import einzelpreis, euro, preis_je_anzeigeeinheit, zahl
 from kalkulation.berechnung import preis_pro_basiseinheit
 from kalkulation.einheiten import EINHEITEN
 from kalkulation.modelle import Artikel, Kategorie
-from oberflaeche import datenbank, dezimal, merke_meldung, zeige_meldung
+from oberflaeche import auswahl_tabelle, datenbank, dezimal, merke_meldung, zeige_meldung
 
 KATEGORIE_TEXT = {Kategorie.ZUTAT: "Zutat", Kategorie.VERPACKUNG: "Verpackung"}
 FILTER = {"Alle": None, "Zutaten": Kategorie.ZUTAT, "Verpackungen": Kategorie.VERPACKUNG}
@@ -39,7 +39,9 @@ def tabellenzeile(artikel: Artikel) -> dict[str, str]:
 
 
 if sichtbar:
-    st.dataframe(pd.DataFrame([tabellenzeile(a) for a in sichtbar]), hide_index=True, width="stretch")
+    auswahl_tabelle(
+        pd.DataFrame([tabellenzeile(a) for a in sichtbar]), [a.id for a in sichtbar], "artikel_auswahl"
+    )
 else:
     st.info("Keine Artikel vorhanden. Lege unten den ersten Artikel an.")
 
@@ -120,7 +122,8 @@ if speichern:
         st.error(str(fehler))
     else:
         merke_meldung(f"Artikel „{gespeichert.name}“ gespeichert.")
-        st.session_state["_naechste_artikel_auswahl"] = gespeichert.id
+        # Nach dem Anlegen leeres Formular für den nächsten Artikel, beim Bearbeiten Auswahl behalten.
+        st.session_state["_naechste_artikel_auswahl"] = gespeichert.id if aktuell else NEU
         st.session_state["artikel_form_version"] = version + 1
         st.rerun()
 

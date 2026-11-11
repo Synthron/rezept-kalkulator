@@ -40,7 +40,8 @@ def test_artikel_anlegen(db):
     assert zeile["Gebinde"] == "2,5 kg"
     assert zeile["Preis je Einheit"] == "1,20 €/kg"
     assert "gespeichert" in at.success[0].value
-    assert at.selectbox(key="artikel_auswahl").value == artikel.id
+    assert at.selectbox(key="artikel_auswahl").value == 0
+    assert at.text_input(key="name_0_1").value == ""
 
 
 def test_artikel_bearbeiten(db):
@@ -52,6 +53,19 @@ def test_artikel_bearbeiten(db):
 
     assert not at.exception
     assert db.lade_artikel()[0].gebinde_preis == D("1.50")
+    assert at.selectbox(key="artikel_auswahl").value == artikel.id
+
+
+def test_klick_in_tabelle_waehlt_artikel(db):
+    db.speichere_artikel(Artikel(None, "Zucker", Kategorie.ZUTAT, D("1"), "kg", D("1.20")))
+    flasche = db.speichere_artikel(Artikel(None, "Flasche", Kategorie.VERPACKUNG, D("1"), "Stk", D("0.60")))
+    at = starte()
+    at.segmented_control(key="artikel_filter").set_value("Verpackungen").run()
+    assert list(at.dataframe[0].value["Name"]) == ["Flasche"]
+    at.session_state["artikel_auswahl_tabelle_0"] = {"selection": {"rows": [0], "columns": []}}
+    at.run()
+    assert not at.exception
+    assert at.selectbox(key="artikel_auswahl").value == flasche.id
 
 
 def test_fehlermeldung_bei_leerem_namen(db):
@@ -84,7 +98,7 @@ def test_verwendeter_artikel_nicht_loeschbar(db):
     db.speichere_rezept(Rezept(None, "Sirup", D("1"), "l", (RezeptPosition(D("1"), "kg", artikel_id=zucker.id),)))
     at = starte(artikel_auswahl=zucker.id)
 
-    assert "Rezept 'Sirup'" in at.caption[0].value
+    assert "Rezept 'Sirup'" in at.caption[-1].value
     assert "Endgültig löschen" not in [b.label for b in at.button]
 
 
