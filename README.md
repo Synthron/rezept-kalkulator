@@ -134,6 +134,10 @@ Hinweise:
 - Die Seitenleiste besteht aus eigenen Schaltflächen (`st.navigation` ist ausgeblendet). Der Seitenwechsel
   per Klick lässt sich mit AppTest nicht prüfen: Wegen des Ordners `pages/` startet AppTest Folgeläufe
   direkt mit der Seite statt mit `app.py`.
+- Tabellen mit Zahlen über `anzeige_tabelle` (in `oberflaeche.py`) bauen: Sortiert wird nach dem Zahlenwert
+  (Mengen in Basiseinheit), angezeigt wird der deutsch formatierte Text. Reine Textspalten würden beim
+  Sortieren alphabetisch geordnet (z. B. „24 Stk“ vor „5 kg“). In Tests liefert `angezeigt()` aus
+  `tests/seitenhilfe.py` die angezeigten Texte.
 
 ## Daten
 

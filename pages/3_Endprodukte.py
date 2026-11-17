@@ -1,4 +1,3 @@
-import pandas as pd
 import streamlit as st
 
 from kalkulation.anzeige import einzelpreis, euro, preis_je_anzeigeeinheit, zahl
@@ -7,7 +6,9 @@ from kalkulation.einheiten import Gruppe, gruppe
 from kalkulation.modelle import Endprodukt
 from oberflaeche import (
     VERPACKUNGS_SPALTEN,
+    anzeige_tabelle,
     auswahl_tabelle,
+    betrag,
     datenbank,
     dezimal,
     endprodukt_tabelle,
@@ -138,13 +139,13 @@ if vorschau:
     zeilen = [{
         "Position": f"Inhalt: {vorschau.rezept.rezept.name}",
         "Menge": f"{zahl(vorschau.endprodukt.fuellmenge_ml)} ml à {einzelpreis(preis)}/{einheit}",
-        "Kosten": euro(vorschau.inhaltskosten),
+        "Kosten": betrag(vorschau.inhaltskosten),
     }]
     zeilen += [
-        {"Position": v.name, "Menge": f"{zahl(v.position.anzahl)} Stk", "Kosten": euro(v.kosten)}
+        {"Position": v.name, "Menge": f"{zahl(v.position.anzahl)} Stk", "Kosten": betrag(v.kosten)}
         for v in vorschau.verpackung
     ]
-    st.dataframe(pd.DataFrame(zeilen), hide_index=True, width="stretch")
+    st.dataframe(anzeige_tabelle(zeilen), hide_index=True, width="stretch")
 
     spalte1, spalte2, spalte3 = st.columns(3)
     spalte1.metric("Inhalt", euro(vorschau.inhaltskosten))

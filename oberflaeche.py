@@ -6,11 +6,12 @@ from decimal import Decimal
 
 import pandas as pd
 import streamlit as st
+from pandas.io.formats.style import Styler
 
 from kalkulation.anzeige import euro, preis_text, zahl
 from kalkulation.berechnung import EndproduktKalkulation, RezeptKalkulation
 from kalkulation.datenbank import Datenbank
-from kalkulation.einheiten import Gruppe, gruppe
+from kalkulation.einheiten import Gruppe, gruppe, in_basis
 from kalkulation.modelle import Artikel, Kategorie, Rezept, RezeptPosition, VerpackungsPosition
 
 POSITIONS_SPALTEN = ["Zutat", "Menge", "Einheit"]
@@ -37,7 +38,7 @@ def zeige_meldung() -> None:
         st.success(meldung)
 
 
-def auswahl_tabelle(daten: pd.DataFrame, ids: list[int], auswahl_key: str) -> None:
+def auswahl_tabelle(daten: Styler, ids: list[int], auswahl_key: str) -> None:
     """Tabelle, in der ein Klick auf eine Zeile den Eintrag in der Auswahlbox `auswahl_key` öffnet."""
     version = st.session_state.setdefault(f"_{auswahl_key}_tabelle", 0)
     gewaehlt = st.dataframe(
@@ -54,6 +55,37 @@ def auswahl_tabelle(daten: pd.DataFrame, ids: list[int], auswahl_key: str) -> No
         # Neuer Schlüssel hebt die Markierung auf, damit sie nicht veraltet stehen bleibt.
         st.session_state[f"_{auswahl_key}_tabelle"] = version + 1
         st.rerun()
+
+
+# --- Sortierbare Anzeige ---------------------------------------------------------
+
+@dataclass(frozen=True)
+class Wert:
+    """Tabellenzelle, die nach `sortierung` sortiert, aber als `text` angezeigt wird."""
+
+    sortierung: float
+    text: str
+
+
+def betrag(wert: Decimal) -> Wert:
+    return Wert(float(wert), euro(wert))
+
+
+def menge_wert(wert: Decimal, einheit: str) -> Wert:
+    """Sortiert nach der Menge in der Basiseinheit, damit 500 g vor 1 kg steht."""
+    return Wert(float(in_basis(wert, einheit)), f"{zahl(wert)} {einheit}")
+
+
+def anzeige_tabelle(zeilen: Iterable[dict[str, object]]) -> Styler:
+    """Tabelle, deren Wert-Spalten in der Oberfläche numerisch statt alphabetisch sortieren."""
+    zeilen = list(zeilen)
+    daten = pd.DataFrame([{s: w.sortierung if isinstance(w, Wert) else w for s, w in z.items()} for z in zeilen])
+    styler = daten.style
+    for nr, zeile in enumerate(zeilen):
+        for spalte, wert in zeile.items():
+            if isinstance(wert, Wert):
+                styler.format(lambda _, text=wert.text: text, subset=pd.IndexSlice[[nr], [spalte]])
+    return styler
 
 
 # --- Rezeptpositionen ↔ Tabelle --------------------------------------------------
@@ -157,29 +189,32 @@ def verpackung_aus_tabelle(
 
 # --- Übersichtstabellen ----------------------------------------------------------
 
-def rezept_tabelle(kalkulationen: Iterable[RezeptKalkulation]) -> pd.DataFrame:
-    return pd.DataFrame([
+def rezept_tabelle(kalkulationen: Iterable[RezeptKalkulation]) -> Styler:
+    return anzeige_tabelle(
         {
             "Name": k.rezept.name,
-            "Ausbeute": f"{zahl(k.rezept.ausbeute_menge)} {k.rezept.ausbeute_einheit}",
+            "Ausbeute": menge_wert(k.rezept.ausbeute_menge, k.rezept.ausbeute_einheit),
             "Zutaten": len(k.rezept.positionen),
-            "Chargenkosten": euro(k.chargenkosten),
-            "Kosten je Einheit": preis_text(k.preis_pro_basiseinheit, k.rezept.ausbeute_einheit),
+            "Chargenkosten": betrag(k.chargenkosten),
+            "Kosten je Einheit": Wert(
+                float(k.preis_pro_basiseinheit * in_basis(Decimal(1), k.rezept.ausbeute_einheit)),
+                preis_text(k.preis_pro_basiseinheit, k.rezept.ausbeute_einheit),
+            ),
             "Notiz": k.rezept.notiz,
         }
         for k in kalkulationen
-    ])
+    )
 
 
-def endprodukt_tabelle(kalkulationen: Iterable[EndproduktKalkulation]) -> pd.DataFrame:
-    return pd.DataFrame([
+def endprodukt_tabelle(kalkulationen: Iterable[EndproduktKalkulation]) -> Styler:
+    return anzeige_tabelle(
         {
             "Endprodukt": k.endprodukt.name,
             "Rezept": k.rezept.rezept.name,
-            "Füllmenge": f"{zahl(k.endprodukt.fuellmenge_ml)} ml",
-            "Inhalt": euro(k.inhaltskosten),
-            "Verpackung": euro(k.verpackungskosten),
-            "Herstellkosten je Gebinde": euro(k.herstellkosten),
+            "Füllmenge": menge_wert(k.endprodukt.fuellmenge_ml, "ml"),
+            "Inhalt": betrag(k.inhaltskosten),
+            "Verpackung": betrag(k.verpackungskosten),
+            "Herstellkosten je Gebinde": betrag(k.herstellkosten),
         }
         for k in kalkulationen
-    ])
+    )

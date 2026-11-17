@@ -9,9 +9,12 @@ from kalkulation.einheiten import EINHEITEN, einheiten_der_gruppe, gruppe, in_ba
 from kalkulation.modelle import Rezept
 from oberflaeche import (
     POSITIONS_SPALTEN,
+    anzeige_tabelle,
     auswahl_tabelle,
+    betrag,
     datenbank,
     dezimal,
+    menge_wert,
     merke_meldung,
     positionen_aus_tabelle,
     quellen,
@@ -166,10 +169,10 @@ if vorschau:
     st.subheader("Kalkulation")
     if vorschau.positionen:
         st.dataframe(
-            pd.DataFrame([
-                {"Zutat": p.name, "Menge": f"{zahl(p.position.menge)} {p.position.einheit}", "Kosten": euro(p.kosten)}
+            anzeige_tabelle(
+                {"Zutat": p.name, "Menge": menge_wert(p.position.menge, p.position.einheit), "Kosten": betrag(p.kosten)}
                 for p in vorschau.positionen
-            ]),
+            ),
             hide_index=True,
             width="stretch",
         )

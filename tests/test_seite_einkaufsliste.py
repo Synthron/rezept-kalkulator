@@ -1,4 +1,4 @@
-from seitenhilfe import klicke, starte_seite
+from seitenhilfe import angezeigt, klicke, starte_seite
 
 
 def starte(**session_state):
@@ -22,10 +22,10 @@ def test_hochrechnung_fuer_endprodukte(beispiel_komplett):
         "Einkauf (ganze Gebinde)": "173,40 €",
         "Materialverbrauch": "90,30 €",
     }
-    einkauf, herstellen = (d.value for d in at.dataframe)
+    einkauf, herstellen = (angezeigt(d) for d in at.dataframe)
     zeilen = einkauf.set_index("Artikel")
     assert zeilen.loc["Orangen", "Bedarf"] == "13 kg"
-    assert zeilen.loc["Orangen", "Anzahl Gebinde"] == 2
+    assert zeilen.loc["Orangen", "Anzahl Gebinde"] == "2"
     assert zeilen.loc["Weißer Zucker", "Bedarf"] == "6,5 kg"
     assert zeilen.loc["Flasche 0,5 l", "Bedarf"] == "30 Stk"
     assert dict(zip(herstellen["Rezept"], herstellen["Chargen"])) == {"Orangensirup": "6,5", "Orangenlikör": "5"}
@@ -37,7 +37,7 @@ def test_hochrechnung_fuer_rezept(beispiel_komplett):
     at.multiselect(key="ek_rezepte").set_value([sirup.id]).run()
     at.number_input(key=f"ek_menge_{sirup.id}").set_value(4.0).run()
     assert not at.exception
-    einkauf = at.dataframe[0].value.set_index("Artikel")
+    einkauf = angezeigt(at.dataframe[0]).set_index("Artikel")
     assert einkauf.loc["Orangen", "Bedarf"] == "4 kg"
     assert einkauf.loc["Wasser", "Bedarf"] == "2 l"
     assert "Flasche 0,5 l" not in einkauf.index

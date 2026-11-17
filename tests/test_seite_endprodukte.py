@@ -2,7 +2,7 @@ from decimal import Decimal
 
 import pytest
 
-from seitenhilfe import klicke, starte_seite
+from seitenhilfe import angezeigt, klicke, starte_seite
 
 D = Decimal
 
@@ -34,7 +34,7 @@ def test_ohne_rezepte(db):
 def test_uebersicht(db, beispiel):
     at = starte()
     assert not at.exception
-    tabelle = at.dataframe[0].value.set_index("Endprodukt")
+    tabelle = angezeigt(at.dataframe[0]).set_index("Endprodukt")
     assert tabelle.loc["Orangensirup 0,5 l", "Herstellkosten je Gebinde"] == "1,90 €"
     assert tabelle.loc["Orangenlikör 0,5 l", "Herstellkosten je Gebinde"] == "5,23 €"
     assert tabelle.loc["Orangenlikör 0,5 l", "Inhalt"] == "4,38 €"

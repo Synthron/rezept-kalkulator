@@ -1,13 +1,12 @@
 from decimal import Decimal
 
-import pandas as pd
 import streamlit as st
 
 from kalkulation.anzeige import euro, menge_text, zahl
 from kalkulation.berechnung import Kalkulator
 from kalkulation.einheiten import in_basis
 from kalkulation.modelle import Kategorie
-from oberflaeche import datenbank, dezimal
+from oberflaeche import Wert, anzeige_tabelle, betrag, datenbank, dezimal, menge_wert
 
 KATEGORIE_TEXT = {Kategorie.ZUTAT: "Zutat", Kategorie.VERPACKUNG: "Verpackung"}
 
@@ -92,19 +91,19 @@ spalte2.metric(
 
 st.subheader("Einkaufen")
 st.dataframe(
-    pd.DataFrame([
+    anzeige_tabelle(
         {
             "Artikel": p.artikel.name,
             "Kategorie": KATEGORIE_TEXT[p.artikel.kategorie],
-            "Bedarf": menge_text(p.menge_basis, p.artikel.gebinde_einheit),
-            "Gebinde": f"{zahl(p.artikel.gebinde_menge)} {p.artikel.gebinde_einheit}",
+            "Bedarf": Wert(float(p.menge_basis), menge_text(p.menge_basis, p.artikel.gebinde_einheit)),
+            "Gebinde": menge_wert(p.artikel.gebinde_menge, p.artikel.gebinde_einheit),
             "Anzahl Gebinde": p.gebinde_anzahl,
-            "Einkauf": euro(p.einkaufskosten),
-            "Verbrauch": euro(p.verbrauchskosten),
+            "Einkauf": betrag(p.einkaufskosten),
+            "Verbrauch": betrag(p.verbrauchskosten),
             "Lieferant": p.artikel.lieferant,
         }
         for p in einkauf
-    ]),
+    ),
     hide_index=True,
     width="stretch",
 )
@@ -116,8 +115,8 @@ for rezept_id, menge in bedarf.rezepte.items():
     chargen = menge / in_basis(rezept.ausbeute_menge, rezept.ausbeute_einheit)
     herstellen.append({
         "Rezept": rezept.name,
-        "Menge": menge_text(menge, rezept.ausbeute_einheit),
-        "Chargen": zahl(chargen.quantize(Decimal("0.01"))),
-        "Ausbeute je Charge": f"{zahl(rezept.ausbeute_menge)} {rezept.ausbeute_einheit}",
+        "Menge": Wert(float(menge), menge_text(menge, rezept.ausbeute_einheit)),
+        "Chargen": Wert(float(chargen), zahl(chargen.quantize(Decimal("0.01")))),
+        "Ausbeute je Charge": menge_wert(rezept.ausbeute_menge, rezept.ausbeute_einheit),
     })
-st.dataframe(pd.DataFrame(herstellen), hide_index=True, width="stretch")
+st.dataframe(anzeige_tabelle(herstellen), hide_index=True, width="stretch")

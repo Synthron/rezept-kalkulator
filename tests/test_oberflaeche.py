@@ -5,6 +5,9 @@ import pandas as pd
 from kalkulation.modelle import Artikel, Kategorie, Rezept, RezeptPosition, VerpackungsPosition
 from oberflaeche import (
     Quelle,
+    anzeige_tabelle,
+    betrag,
+    menge_wert,
     positionen_aus_tabelle,
     quellen,
     tabelle_aus_positionen,
@@ -119,3 +122,17 @@ def test_verpackung_fehler_und_standardanzahl():
     verpackung, fehler = verpackung_aus_tabelle(tabelle, optionen)
     assert verpackung == [VerpackungsPosition(21, D("1"))]
     assert [f.split(":")[0] for f in fehler] == ["Verpackung Zeile 3", "Verpackung Zeile 4 (Etikett)"]
+
+
+# --- Sortierbare Anzeige ---------------------------------------------------------
+
+def test_anzeige_tabelle_sortiert_nach_zahl_und_zeigt_text():
+    styler = anzeige_tabelle([
+        {"Name": "Orangen", "Gebinde": menge_wert(D("5"), "kg"), "Gebindepreis": betrag(D("12.5"))},
+        {"Name": "Zucker", "Gebinde": menge_wert(D("500"), "g"), "Gebindepreis": betrag(D("9"))},
+        {"Name": "Flaschen", "Gebinde": menge_wert(D("24"), "Stk"), "Gebindepreis": betrag(D("100"))},
+    ])
+    assert list(styler.data["Gebinde"]) == [5000.0, 500.0, 24.0]
+    assert list(styler.data["Gebindepreis"]) == [12.5, 9.0, 100.0]
+    html = styler.to_html()
+    assert all(text in html for text in ["5 kg", "500 g", "24 Stk", "12,50 €", "9,00 €", "100,00 €"])

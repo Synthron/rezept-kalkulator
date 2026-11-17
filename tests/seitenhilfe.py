@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+import pandas as pd
+from streamlit import dataframe_util
 from streamlit.testing.v1 import AppTest
 
 PROJEKT = Path(__file__).resolve().parent.parent
@@ -26,3 +28,10 @@ def _starte(pfad: Path, session_state: dict) -> AppTest:
 
 def klicke(at: AppTest, beschriftung: str) -> AppTest:
     return next(b for b in at.button if b.label == beschriftung).click().run()
+
+
+def angezeigt(tabelle) -> pd.DataFrame:
+    """Tabelle so, wie sie angezeigt wird (formatierte Texte statt Sortierwerte)."""
+    if tabelle.proto.arrow_data.styler.display_values:
+        return dataframe_util.convert_arrow_bytes_to_pandas_df(tabelle.proto.arrow_data.styler.display_values)
+    return tabelle.value

@@ -1,11 +1,20 @@
-import pandas as pd
 import streamlit as st
 
-from kalkulation.anzeige import einzelpreis, euro, preis_je_anzeigeeinheit, zahl
+from kalkulation.anzeige import einzelpreis, preis_je_anzeigeeinheit
 from kalkulation.berechnung import preis_pro_basiseinheit
 from kalkulation.einheiten import EINHEITEN
 from kalkulation.modelle import Artikel, Kategorie
-from oberflaeche import auswahl_tabelle, datenbank, dezimal, merke_meldung, zeige_meldung
+from oberflaeche import (
+    Wert,
+    anzeige_tabelle,
+    auswahl_tabelle,
+    betrag,
+    datenbank,
+    dezimal,
+    menge_wert,
+    merke_meldung,
+    zeige_meldung,
+)
 
 KATEGORIE_TEXT = {Kategorie.ZUTAT: "Zutat", Kategorie.VERPACKUNG: "Verpackung"}
 FILTER = {"Alle": None, "Zutaten": Kategorie.ZUTAT, "Verpackungen": Kategorie.VERPACKUNG}
@@ -25,23 +34,21 @@ filter_kategorie = FILTER.get(filter_text or "Alle")
 sichtbar = [a for a in artikel_nach_id.values() if filter_kategorie in (None, a.kategorie)]
 
 
-def tabellenzeile(artikel: Artikel) -> dict[str, str]:
+def tabellenzeile(artikel: Artikel) -> dict[str, object]:
     preis, einheit = preis_je_anzeigeeinheit(preis_pro_basiseinheit(artikel), artikel.gebinde_einheit)
     return {
         "Name": artikel.name,
         "Kategorie": KATEGORIE_TEXT[artikel.kategorie],
-        "Gebinde": f"{zahl(artikel.gebinde_menge)} {artikel.gebinde_einheit}",
-        "Gebindepreis": euro(artikel.gebinde_preis),
-        "Preis je Einheit": f"{einzelpreis(preis)}/{einheit}",
+        "Gebinde": menge_wert(artikel.gebinde_menge, artikel.gebinde_einheit),
+        "Gebindepreis": betrag(artikel.gebinde_preis),
+        "Preis je Einheit": Wert(float(preis), f"{einzelpreis(preis)}/{einheit}"),
         "Lieferant": artikel.lieferant,
         "Notiz": artikel.notiz,
     }
 
 
 if sichtbar:
-    auswahl_tabelle(
-        pd.DataFrame([tabellenzeile(a) for a in sichtbar]), [a.id for a in sichtbar], "artikel_auswahl"
-    )
+    auswahl_tabelle(anzeige_tabelle(tabellenzeile(a) for a in sichtbar), [a.id for a in sichtbar], "artikel_auswahl")
 else:
     st.info("Keine Artikel vorhanden. Lege unten den ersten Artikel an.")
 

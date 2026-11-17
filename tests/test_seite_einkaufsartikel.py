@@ -3,7 +3,7 @@ from decimal import Decimal
 import pytest
 
 from kalkulation.modelle import Artikel, Kategorie, Rezept, RezeptPosition
-from seitenhilfe import klicke, starte_seite
+from seitenhilfe import angezeigt, klicke, starte_seite
 
 D = Decimal
 
@@ -36,7 +36,7 @@ def test_artikel_anlegen(db):
     [artikel] = db.lade_artikel()
     assert (artikel.name, artikel.gebinde_menge, artikel.gebinde_preis) == ("Weißer Zucker", D("2.5"), D("3"))
     assert artikel.lieferant == "Großmarkt"
-    zeile = at.dataframe[0].value.iloc[0]
+    zeile = angezeigt(at.dataframe[0]).iloc[0]
     assert zeile["Gebinde"] == "2,5 kg"
     assert zeile["Preis je Einheit"] == "1,20 €/kg"
     assert "gespeichert" in at.success[0].value

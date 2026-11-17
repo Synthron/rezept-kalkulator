@@ -4,7 +4,7 @@ import pytest
 from streamlit.proto.SelectWidgetFilterMode_pb2 import SelectWidgetFilterMode
 
 from kalkulation.modelle import Artikel, Endprodukt, Kategorie, Rezept, RezeptPosition
-from seitenhilfe import klicke, starte_seite
+from seitenhilfe import angezeigt, klicke, starte_seite
 
 D = Decimal
 
@@ -54,7 +54,7 @@ def test_leere_seite(db):
 def test_uebersicht_mit_kosten_je_einheit(db, beispiel):
     at = starte()
     assert not at.exception
-    tabelle = at.dataframe[0].value.set_index("Name")
+    tabelle = angezeigt(at.dataframe[0]).set_index("Name")
     assert tabelle.loc["Orangensirup", "Chargenkosten"] == "4,20 €"
     assert tabelle.loc["Orangensirup", "Kosten je Einheit"] == "2,10 €/l"
     assert tabelle.loc["Orangenlikör", "Kosten je Einheit"] == "8,76 €/l"
@@ -69,7 +69,7 @@ def test_rezept_mit_zwischenprodukt_anzeigen(db, beispiel):
         "Kosten je cl": "0,088 €",
         "Kosten je l": "8,76 €",
     }
-    positionen = next(d.value for d in at.dataframe if "Kosten" in d.value.columns)
+    positionen = next(angezeigt(d) for d in at.dataframe if "Kosten" in d.value.columns)
     assert list(positionen["Zutat"]) == ["Alkohol 96 %", "Orangensirup", "Wasser"]
     assert list(positionen["Kosten"]) == ["7,50 €", "1,26 €", "0,00 €"]
     assert any("Summe der Zutatenmengen: 1 l" in c.value for c in at.caption)

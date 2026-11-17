@@ -1,4 +1,4 @@
-from seitenhilfe import starte_app, starte_seite
+from seitenhilfe import angezeigt, starte_app, starte_seite
 
 
 def starte():
@@ -21,7 +21,7 @@ def test_uebersicht_mit_daten(beispiel_komplett):
     assert not at.exception
     assert metriken(at) == {"Einkaufsartikel": "7", "Rezepte": "3", "Endprodukte": "2"}
 
-    endprodukte, rezepte = (d.value for d in at.dataframe)
+    endprodukte, rezepte = (angezeigt(d) for d in at.dataframe)
     assert dict(zip(endprodukte["Endprodukt"], endprodukte["Herstellkosten je Gebinde"])) == {
         "Orangenlikör 0,5 l": "5,23 €",
         "Orangensirup 0,5 l": "1,90 €",
