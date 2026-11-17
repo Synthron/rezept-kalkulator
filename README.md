@@ -48,8 +48,10 @@ Beenden mit `Strg+C` im Terminal.
 
 ### Einheiten
 
-Umgerechnet wird nur innerhalb einer Gruppe. Passt die Einheit im Rezept nicht zur Einkaufseinheit
-(z. B. Zucker in kg gekauft, im Rezept in ml), meldet das Tool einen Fehler statt falsch zu rechnen.
+Umgerechnet wird nur innerhalb einer Gruppe. Im Rezept werden zu jeder Zutat daher nur passende
+Einheiten angeboten, vorausgewählt ist die Einkaufs- bzw. Ausbeute-Einheit. Passt eine gespeicherte
+Einheit später nicht mehr (z. B. Einkaufseinheit von kg auf Stk geändert), meldet das Tool einen Fehler
+statt falsch zu rechnen.
 
 | Gruppe | Basiseinheit | Einheiten |
 |---|---|---|
@@ -128,7 +130,10 @@ Hinweise:
 - Für eine komplett frische Umgebung den Ordner `.venv` löschen und `python start.py` erneut ausführen.
 - Nach Codeänderungen die App neu starten (`Strg+C`, dann `python start.py`). `start.py` schaltet das
   automatische Neuladen von Streamlit bewusst ab, weil halb neu geladene Module zu Fehlern führen.
-- Neue Seiten in `pages/` müssen zusätzlich in `app.py` (`st.navigation`) eingetragen werden.
+- Neue Seiten in `pages/` müssen zusätzlich in `app.py` (Liste `seiten`) eingetragen werden.
+- Die Seitenleiste besteht aus eigenen Schaltflächen (`st.navigation` ist ausgeblendet). Der Seitenwechsel
+  per Klick lässt sich mit AppTest nicht prüfen: Wegen des Ordners `pages/` startet AppTest Folgeläufe
+  direkt mit der Seite statt mit `app.py`.
 
 ## Daten
 
@@ -177,7 +182,7 @@ erDiagram
 
 ```
 start.py            Startskript für Windows und Linux
-app.py              Streamlit-Einstieg: Navigation (Seitenleiste)
+app.py              Streamlit-Einstieg: Navigation (Seitenleiste mit Schaltflächen)
 oberflaeche.py      Gemeinsame Hilfen der Seiten (Datenbankzugriff, Meldungen, Tabellen)
 pages/              Seiten, in app.py registriert
   0_Uebersicht.py   Startseite: Herstellkosten aller Endprodukte und Rezepte

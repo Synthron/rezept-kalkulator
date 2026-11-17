@@ -39,6 +39,16 @@ def test_app_startet_mit_uebersicht(ui_db):
     assert at.title[0].value == "Übersicht"
 
 
+def test_navigation_als_schaltflaechen(ui_db):
+    # Klick-Navigation ist hier nicht prüfbar: AppTest startet Folgeläufe wegen pages/ direkt mit der Seite statt app.py.
+    at = starte_app()
+    navigation = {b.label: b for b in at.sidebar.button}
+    assert list(navigation) == [
+        "Übersicht", "Einkaufsartikel", "Rezepte", "Endprodukte", "Einkaufsliste", "Import / Export",
+    ]
+    assert [b.proto.type for b in navigation.values()] == ["primary"] + ["secondary"] * 5
+
+
 def waehle_zeile(at, tabelle, spalte, name):
     nr = {"uebersicht_endprodukte": 0, "uebersicht_rezepte": 1}[tabelle]
     zeile = list(at.dataframe[nr].value[spalte]).index(name)
