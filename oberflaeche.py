@@ -7,7 +7,7 @@ from decimal import Decimal
 import pandas as pd
 import streamlit as st
 
-from kalkulation.anzeige import euro, preise_je_einheit_text, zahl
+from kalkulation.anzeige import euro, preis_text, zahl
 from kalkulation.berechnung import EndproduktKalkulation, RezeptKalkulation
 from kalkulation.datenbank import Datenbank
 from kalkulation.einheiten import Gruppe, gruppe
@@ -45,12 +45,12 @@ def auswahl_tabelle(daten: pd.DataFrame, ids: list[int], auswahl_key: str) -> No
         hide_index=True,
         width="stretch",
         on_select="rerun",
-        selection_mode="single-row",
+        selection_mode="single-cell",
         key=f"{auswahl_key}_tabelle_{version}",
     )
     st.caption("Zeile anklicken, um den Eintrag unten zu bearbeiten.")
-    if zeilen := gewaehlt.selection.rows:
-        st.session_state[f"_naechste_{auswahl_key}"] = ids[zeilen[0]]
+    if zellen := gewaehlt.selection.cells:
+        st.session_state[f"_naechste_{auswahl_key}"] = ids[zellen[0][0]]
         # Neuer Schlüssel hebt die Markierung auf, damit sie nicht veraltet stehen bleibt.
         st.session_state[f"_{auswahl_key}_tabelle"] = version + 1
         st.rerun()
@@ -164,7 +164,7 @@ def rezept_tabelle(kalkulationen: Iterable[RezeptKalkulation]) -> pd.DataFrame:
             "Ausbeute": f"{zahl(k.rezept.ausbeute_menge)} {k.rezept.ausbeute_einheit}",
             "Zutaten": len(k.rezept.positionen),
             "Chargenkosten": euro(k.chargenkosten),
-            "Kosten je Einheit": preise_je_einheit_text(k.preis_pro_basiseinheit, k.rezept.ausbeute_einheit),
+            "Kosten je Einheit": preis_text(k.preis_pro_basiseinheit, k.rezept.ausbeute_einheit),
             "Notiz": k.rezept.notiz,
         }
         for k in kalkulationen

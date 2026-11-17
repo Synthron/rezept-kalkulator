@@ -88,7 +88,7 @@ def test_neues_endprodukt_anlegen(db, beispiel):
 def test_klick_in_tabelle_waehlt_endprodukt(db, beispiel):
     at = starte()
     zeile = list(at.dataframe[0].value["Endprodukt"]).index("Orangenlikör 0,5 l")
-    at.session_state["endprodukt_auswahl_tabelle_0"] = {"selection": {"rows": [zeile], "columns": []}}
+    at.session_state["endprodukt_auswahl_tabelle_0"] = {"selection": {"rows": [], "columns": [], "cells": [[zeile, "Inhalt"]]}}
     at.run()
     assert not at.exception
     assert at.selectbox(key="endprodukt_auswahl").value == beispiel["likoer_flasche"].id

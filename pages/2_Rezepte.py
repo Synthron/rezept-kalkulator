@@ -5,7 +5,7 @@ import streamlit as st
 
 from kalkulation.anzeige import einzelpreis, euro, preise_je_einheit, zahl
 from kalkulation.berechnung import Kalkulator, mengen_summe
-from kalkulation.einheiten import EINHEITEN, gruppe, in_basis
+from kalkulation.einheiten import EINHEITEN, einheiten_der_gruppe, gruppe, in_basis
 from kalkulation.modelle import Rezept
 from oberflaeche import (
     POSITIONS_SPALTEN,
@@ -75,6 +75,7 @@ ausbeute_einheit = spalte3.selectbox(
     "Einheit",
     EINHEITEN,
     index=EINHEITEN.index(aktuell.ausbeute_einheit if aktuell else "l"),
+    filter_mode=None,
     key=f"rezept_einheit_{k}",
 )
 
@@ -86,29 +87,59 @@ st.subheader("Zutaten")
 if not auswahl_quellen:
     st.info("Es gibt noch keine Einkaufsartikel. Lege sie zuerst auf der Seite „Einkaufsartikel“ an.")
 
-tabelle = st.data_editor(
-    tabelle_aus_positionen(aktuell.positionen if aktuell else (), auswahl_quellen),
-    key=f"rezept_positionen_{k}",
-    num_rows="dynamic",
-    hide_index=True,
-    width="stretch",
-    column_order=POSITIONS_SPALTEN,
-    column_config={
-        "Zutat": st.column_config.SelectboxColumn(
-            "Zutat / Zwischenprodukt", options=list(auswahl_quellen), required=True, width="large"
-        ),
-        "Menge": st.column_config.NumberColumn("Menge", min_value=0.0, step=0.001, format="localized", required=True),
-        "Einheit": st.column_config.SelectboxColumn(
-            "Einheit", options=list(EINHEITEN), help="Leer lassen = Einheit des Einkaufs bzw. der Ausbeute"
-        ),
-    },
-)
-st.caption(
-    "Neue Zeile: in die leere Zeile am Tabellenende klicken. Entfernen: Zeile links markieren und "
-    "Papierkorb oben rechts an der Tabelle anklicken. Einheit leer = Einkaufs- bzw. Ausbeute-Einheit."
-)
+zutaten = list(auswahl_quellen)
+start = tabelle_aus_positionen(aktuell.positionen if aktuell else (), auswahl_quellen).to_dict("records")
+zeilen = st.session_state.setdefault(f"rezept_zeilen_{k}", list(range(len(start))))
+eingaben = []
+for nr, z in enumerate(zeilen):
+    vorgabe = start[z] if z < len(start) else {"Zutat": None, "Menge": None, "Einheit": None}
+    beschriftung = "visible" if nr == 0 else "collapsed"
+    s_zutat, s_menge, s_einheit, s_weg = st.columns([5, 2, 1, 0.4], vertical_alignment="bottom")
+    zutat = s_zutat.selectbox(
+        "Zutat / Zwischenprodukt",
+        zutaten,
+        index=zutaten.index(vorgabe["Zutat"]) if vorgabe["Zutat"] in zutaten else None,
+        placeholder="Zutat auswählen",
+        label_visibility=beschriftung,
+        key=f"rezept_zutat_{k}_{z}",
+    )
+    menge = s_menge.number_input(
+        "Menge",
+        min_value=0.0,
+        value=vorgabe["Menge"],
+        step=0.1,
+        format="%g",
+        label_visibility=beschriftung,
+        key=f"rezept_menge_{k}_{z}",
+    )
+    einheit = None
+    if zutat:
+        quell_einheit = auswahl_quellen[zutat].einheit
+        standard = vorgabe["Einheit"] if zutat == vorgabe["Zutat"] else quell_einheit
+        optionen = einheiten_der_gruppe(quell_einheit)
+        if standard not in optionen:  # unpassende gespeicherte Einheit sichtbar lassen, damit der Fehler erscheint
+            optionen = (*optionen, standard)
+        einheit = s_einheit.selectbox(
+            "Einheit",
+            optionen,
+            index=optionen.index(standard),
+            filter_mode=None,
+            label_visibility=beschriftung,
+            # Zutat im Schlüssel: Zutatwechsel setzt die Einheit auf deren Standard zurück.
+            key=f"rezept_pos_einheit_{k}_{z}_{zutat}",
+        )
+    if s_weg.button(":material/delete:", key=f"rezept_zeile_weg_{k}_{z}", help="Zutat entfernen"):
+        zeilen.remove(z)
+        st.rerun()
+    eingaben.append({"Zutat": zutat, "Menge": menge, "Einheit": einheit})
 
-positionen, fehler = positionen_aus_tabelle(tabelle, auswahl_quellen)
+if st.button("Zutat hinzufügen", icon=":material/add:", disabled=not zutaten, key=f"rezept_zeile_neu_{k}"):
+    naechste = st.session_state.get(f"rezept_naechste_zeile_{k}", len(start))
+    zeilen.append(naechste)
+    st.session_state[f"rezept_naechste_zeile_{k}"] = naechste + 1
+    st.rerun()
+
+positionen, fehler = positionen_aus_tabelle(pd.DataFrame(eingaben, columns=POSITIONS_SPALTEN), auswahl_quellen)
 notiz = st.text_area("Notiz (optional)", value=aktuell.notiz if aktuell else "", key=f"rezept_notiz_{k}")
 
 # --- Live-Kalkulation ------------------------------------------------------------

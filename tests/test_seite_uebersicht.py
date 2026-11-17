@@ -27,9 +27,9 @@ def test_uebersicht_mit_daten(beispiel_komplett):
         "Orangensirup 0,5 l": "1,90 €",
     }
     assert dict(zip(rezepte["Name"], rezepte["Kosten je Einheit"])) == {
-        "Gelee": "0,0012 €/g · 1,20 €/kg",
-        "Orangenlikör": "0,0088 €/ml · 0,088 €/cl · 8,76 €/l",
-        "Orangensirup": "0,0021 €/ml · 0,021 €/cl · 2,10 €/l",
+        "Gelee": "1,20 €/kg",
+        "Orangenlikör": "8,76 €/l",
+        "Orangensirup": "2,10 €/l",
     }
 
 
@@ -42,7 +42,7 @@ def test_app_startet_mit_uebersicht(ui_db):
 def waehle_zeile(at, tabelle, spalte, name):
     nr = {"uebersicht_endprodukte": 0, "uebersicht_rezepte": 1}[tabelle]
     zeile = list(at.dataframe[nr].value[spalte]).index(name)
-    at.session_state[tabelle] = {"selection": {"rows": [zeile], "columns": []}}
+    at.session_state[tabelle] = {"selection": {"rows": [], "columns": [], "cells": [[zeile, spalte]]}}
     return at.run()
 
 

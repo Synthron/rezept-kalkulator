@@ -25,11 +25,11 @@ if endprodukte:
         hide_index=True,
         width="stretch",
         on_select="rerun",
-        selection_mode="single-row",
+        selection_mode="single-cell",
         key="uebersicht_endprodukte",
     )
-    if zeilen := gewaehlt.selection.rows:
-        st.session_state["_naechste_endprodukt_auswahl"] = endprodukte[zeilen[0]].id
+    if zellen := gewaehlt.selection.cells:
+        st.session_state["_naechste_endprodukt_auswahl"] = endprodukte[zellen[0][0]].id
         st.switch_page("pages/3_Endprodukte.py")
 else:
     st.info(
@@ -46,11 +46,11 @@ if rezepte:
         hide_index=True,
         width="stretch",
         on_select="rerun",
-        selection_mode="single-row",
+        selection_mode="single-cell",
         key="uebersicht_rezepte",
     )
-    if zeilen := gewaehlt.selection.rows:
-        st.session_state["_naechste_rezept_auswahl"] = rezepte[zeilen[0]].id
+    if zellen := gewaehlt.selection.cells:
+        st.session_state["_naechste_rezept_auswahl"] = rezepte[zellen[0][0]].id
         st.switch_page("pages/2_Rezepte.py")
 else:
     st.caption("Noch keine Rezepte vorhanden.")

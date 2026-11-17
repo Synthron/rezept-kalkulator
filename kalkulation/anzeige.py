@@ -51,5 +51,6 @@ def preise_je_einheit(preis_pro_basis: Decimal, einheit: str) -> list[tuple[Deci
     return [(preis_pro_basis * in_basis(Decimal(1), e), e) for e in einheiten_der_gruppe(einheit)]
 
 
-def preise_je_einheit_text(preis_pro_basis: Decimal, einheit: str) -> str:
-    return " · ".join(f"{einzelpreis(p)}/{e}" for p, e in preise_je_einheit(preis_pro_basis, einheit))
+def preis_text(preis_pro_basis: Decimal, einheit: str) -> str:
+    """Preis in genau dieser Einheit, z. B. „2,10 €/l“."""
+    return f"{einzelpreis(preis_pro_basis * in_basis(Decimal(1), einheit))}/{einheit}"

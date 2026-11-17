@@ -7,8 +7,8 @@ from kalkulation.anzeige import (
     euro,
     menge_text,
     preis_je_anzeigeeinheit,
+    preis_text,
     preise_je_einheit,
-    preise_je_einheit_text,
     zahl,
 )
 from kalkulation.einheiten import einheiten_der_gruppe
@@ -67,8 +67,12 @@ def test_preise_je_einheit_stueck():
     assert preise_je_einheit(D("0.35"), "Stk") == [(D("0.35"), "Stk")]
 
 
-def test_preise_je_einheit_text():
-    assert preise_je_einheit_text(D("0.0015"), "kg") == "0,0015 €/g · 1,50 €/kg"
+@pytest.mark.parametrize(
+    ("einheit", "erwartet"),
+    [("kg", "1,50 €/kg"), ("g", "0,0015 €/g"), ("cl", "0,015 €/cl"), ("Stk", "0,0015 €/Stk")],
+)
+def test_preis_text(einheit, erwartet):
+    assert preis_text(D("0.0015"), einheit) == erwartet
 
 
 @pytest.mark.parametrize(

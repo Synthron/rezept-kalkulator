@@ -1,7 +1,7 @@
-import json
 from decimal import Decimal
 
 import pytest
+from streamlit.proto.SelectWidgetFilterMode_pb2 import SelectWidgetFilterMode
 
 from kalkulation.modelle import Artikel, Endprodukt, Kategorie, Rezept, RezeptPosition
 from seitenhilfe import klicke, starte_seite
@@ -56,8 +56,8 @@ def test_uebersicht_mit_kosten_je_einheit(db, beispiel):
     assert not at.exception
     tabelle = at.dataframe[0].value.set_index("Name")
     assert tabelle.loc["Orangensirup", "Chargenkosten"] == "4,20 €"
-    assert tabelle.loc["Orangensirup", "Kosten je Einheit"] == "0,0021 €/ml · 0,021 €/cl · 2,10 €/l"
-    assert tabelle.loc["Orangenlikör", "Kosten je Einheit"] == "0,0088 €/ml · 0,088 €/cl · 8,76 €/l"
+    assert tabelle.loc["Orangensirup", "Kosten je Einheit"] == "2,10 €/l"
+    assert tabelle.loc["Orangenlikör", "Kosten je Einheit"] == "8,76 €/l"
 
 
 def test_rezept_mit_zwischenprodukt_anzeigen(db, beispiel):
@@ -118,7 +118,7 @@ def test_neues_rezept_ohne_zutaten_anlegen(db):
 def test_klick_in_tabelle_waehlt_rezept(db, beispiel):
     at = starte()
     zeile = list(at.dataframe[0].value["Name"]).index("Orangenlikör")
-    at.session_state["rezept_auswahl_tabelle_0"] = {"selection": {"rows": [zeile], "columns": []}}
+    at.session_state["rezept_auswahl_tabelle_0"] = {"selection": {"rows": [], "columns": [], "cells": [[zeile, "Chargenkosten"]]}}
     at.run()
     assert not at.exception
     assert at.selectbox(key="rezept_auswahl").value == beispiel["likoer"].id
@@ -137,10 +137,49 @@ def test_fehler_beim_speichern_wird_angezeigt(db, beispiel):
 
 def test_aktuelles_rezept_nicht_als_zutat_waehlbar(db, beispiel):
     at = starte(rezept_auswahl=beispiel["sirup"].id)
-    editor = next(d for d in at.dataframe if d.editing_mode == "dynamic")
-    optionen = json.loads(editor.proto.columns)["Zutat"]["type_config"]["options"]
+    optionen = at.selectbox(key=f"rezept_zutat_{beispiel['sirup'].id}_0_0").options
     assert "Orangenlikör (Rezept)" in optionen
     assert "Orangensirup (Rezept)" not in optionen
+
+
+def test_gespeicherte_einheit_vorausgewaehlt_und_nur_passende_einheiten(db, beispiel):
+    k = f"{beispiel['sirup'].id}_0"
+    at = starte(rezept_auswahl=beispiel["sirup"].id)
+    einheit = at.selectbox(key=f"rezept_pos_einheit_{k}_0_Orangen")
+    assert einheit.value == "kg"
+    assert einheit.options == ["g", "kg"]
+    assert einheit.proto.filter_mode == SelectWidgetFilterMode.FILTER_MODE_NONE
+
+
+def test_neue_zutat_uebernimmt_einkaufseinheit(db, beispiel):
+    k = f"{beispiel['sirup'].id}_0"
+    at = starte(rezept_auswahl=beispiel["sirup"].id)
+    klicke(at, "Zutat hinzufügen")
+    at.selectbox(key=f"rezept_zutat_{k}_3").select("Alkohol 96 %").run()
+    assert at.selectbox(key=f"rezept_pos_einheit_{k}_3_Alkohol 96 %").value == "l"
+
+    at.number_input(key=f"rezept_menge_{k}_3").set_value(0.5).run()
+    klicke(at, "Speichern")
+    assert not at.exception
+    sirup = next(r for r in db.lade_rezepte() if r.id == beispiel["sirup"].id)
+    assert (sirup.positionen[-1].menge, sirup.positionen[-1].einheit) == (D("0.5"), "l")
+
+
+def test_zutatwechsel_setzt_einheit_zurueck(db, beispiel):
+    k = f"{beispiel['sirup'].id}_0"
+    at = starte(rezept_auswahl=beispiel["sirup"].id)
+    at.selectbox(key=f"rezept_zutat_{k}_0").select("Alkohol 96 %").run()
+    assert at.selectbox(key=f"rezept_pos_einheit_{k}_0_Alkohol 96 %").value == "l"
+
+
+def test_zutat_entfernen(db, beispiel):
+    k = f"{beispiel['sirup'].id}_0"
+    at = starte(rezept_auswahl=beispiel["sirup"].id)
+    next(b for b in at.button if b.key == f"rezept_zeile_weg_{k}_0").click().run()
+    klicke(at, "Speichern")
+    assert not at.exception
+    sirup = next(r for r in db.lade_rezepte() if r.id == beispiel["sirup"].id)
+    assert len(sirup.positionen) == 2
 
 
 def test_rezept_loeschen(db, beispiel):

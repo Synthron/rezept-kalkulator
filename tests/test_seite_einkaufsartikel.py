@@ -62,7 +62,7 @@ def test_klick_in_tabelle_waehlt_artikel(db):
     at = starte()
     at.segmented_control(key="artikel_filter").set_value("Verpackungen").run()
     assert list(at.dataframe[0].value["Name"]) == ["Flasche"]
-    at.session_state["artikel_auswahl_tabelle_0"] = {"selection": {"rows": [0], "columns": []}}
+    at.session_state["artikel_auswahl_tabelle_0"] = {"selection": {"rows": [], "columns": [], "cells": [[0, "Kategorie"]]}}
     at.run()
     assert not at.exception
     assert at.selectbox(key="artikel_auswahl").value == flasche.id
